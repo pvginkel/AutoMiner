@@ -6,20 +6,17 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class MCMap {
-    public final CoordMap<MCAFile> files = new CoordMap<MCAFile>();
-    private final File worldF;
-    public final Tag levelDat;
-    public final Tag levelDatOld;
-    public int maxChunksLoaded;
-
-    public final ArrayList<Chunk> loadedChunks = new ArrayList<Chunk>();
+    private final CoordMap<MCAFile> files = new CoordMap<>();
+    private final Tag levelDat;
+    private final Tag levelDatOld;
+    private int maxChunksLoaded;
+    private final ArrayList<Chunk> loadedChunks = new ArrayList<>();
 
     public MCMap(File worldF) throws FileNotFoundException, IOException {
         this(worldF, (int)(Math.min(Runtime.getRuntime().maxMemory() / 500000, 100000000)));
     }
 
     public MCMap(File worldF, int maxChunksLoaded) throws FileNotFoundException, IOException {
-        this.worldF = worldF;
         this.maxChunksLoaded = maxChunksLoaded;
         System.out.println(maxChunksLoaded);
 
@@ -64,7 +61,7 @@ public class MCMap {
                         for (int dx = -1; dx < 2; dx++) {
                             Chunk ch2 = getChunk(chunkX + dx, chunkZ + dz);
                             if (ch2 != null) {
-                                ch.chunkCtx[dz + 1][dx + 1] = ch2;
+                                ch.setChunk(dx + 1, dz + 1, ch2);
                             }
                         }
                     }
@@ -73,14 +70,18 @@ public class MCMap {
         }
     }
 
+    public CoordMap<MCAFile> getFiles() {
+        return files;
+    }
+
     public void resetLevelData() {
-        levelDat.findTagByName("raining").setValue(Byte.valueOf((byte)0));
-        levelDat.findTagByName("thundering").setValue(Byte.valueOf((byte)0));
-        levelDat.findTagByName("Time").setValue(Long.valueOf((long)1776562l));
+        levelDat.findTagByName("raining").setValue((byte)0);
+        levelDat.findTagByName("thundering").setValue((byte)0);
+        levelDat.findTagByName("Time").setValue((long)1776562l);
         if (levelDatOld != null) {
-            levelDatOld.findTagByName("raining").setValue(Byte.valueOf((byte)0));
-            levelDatOld.findTagByName("thundering").setValue(Byte.valueOf((byte)0));
-            levelDatOld.findTagByName("Time").setValue(Long.valueOf((long)1776562l));
+            levelDatOld.findTagByName("raining").setValue((byte)0);
+            levelDatOld.findTagByName("thundering").setValue((byte)0);
+            levelDatOld.findTagByName("Time").setValue((long)1776562l);
         }
     }
 
@@ -158,38 +159,6 @@ public class MCMap {
         f.setBlockType(type, rem(x), y, rem(z));
     }
 
-    public void healBlockLight(int x, int y, int z) {
-        int max = 0;
-        for (int dz = -1; dz < 2; dz++) {
-            for (int dx = -1; dx < 2; dx++) {
-                for (int dy = -1; dy < 2; dy++) {
-                    if (dz != 0 && dz != 0 && dy != 0) {
-                        continue;
-                    }
-                    //if (dz == 0 && dx == 0 && dy == 0) { continue; }
-                    max = Math.max(getBlockLight(x + dx, y + dy, z + dz), max);
-                }
-            }
-        }
-        setBlockLight((byte)max, x, y, z);
-    }
-
-    public void healSkyLight(int x, int y, int z) {
-        int max = 0;
-        for (int dz = -1; dz < 2; dz++) {
-            for (int dx = -1; dx < 2; dx++) {
-                for (int dy = -1; dy < 2; dy++) {
-                    if (dz != 0 && dz != 0 && dy != 0) {
-                        continue;
-                    }
-                    //if (dz == 0 && dx == 0 && dy == 0) { continue; }
-                    max = Math.max(getSkyLight(x + dx, y + dy, z + dz), max);
-                }
-            }
-        }
-        setSkyLight((byte)max, x, y, z);
-    }
-
     public boolean isDataMaskSet(int mask, int x, int y, int z) {
         int d = getData(x, y, z);
         return (d & mask) == mask;
@@ -210,64 +179,4 @@ public class MCMap {
         }
         f.setData(data, rem(x), y, rem(z));
     }
-
-    public int getSkyLight(int x, int y, int z) {
-        MCAFile f = files.get(fileC(x), fileC(z));
-        if (f == null) {
-            return -1;
-        }
-        return f.getSkyLight(rem(x), y, rem(z));
-    }
-
-    public void setSkyLight(byte light, int x, int y, int z) {
-        MCAFile f = files.get(fileC(x), fileC(z));
-        if (f == null) {
-            return;
-        }
-        f.setSkyLight(light, rem(x), y, rem(z));
-    }
-
-    public int getBlockLight(int x, int y, int z) {
-        MCAFile f = files.get(fileC(x), fileC(z));
-        if (f == null) {
-            return -1;
-        }
-        return f.getBlockLight(rem(x), y, rem(z));
-    }
-
-    public void setBlockLight(byte light, int x, int y, int z) {
-        MCAFile f = files.get(fileC(x), fileC(z));
-        if (f == null) {
-            return;
-        }
-        f.setBlockLight(light, rem(x), y, rem(z));
-    }
-
-    public void clearTileEntity(int x, int y, int z) {
-        MCAFile f = files.get(fileC(x), fileC(z));
-        if (f == null) {
-            return;
-        }
-        f.clearTileEntity(rem(x), y, rem(z), x, y, z);
-    }
-
-    public Tag getTileEntity(int x, int y, int z) {
-        MCAFile f = files.get(fileC(x), fileC(z));
-        if (f == null) {
-            return null;
-        }
-        return f.getTileEntity(rem(x), y, rem(z), x, y, z);
-    }
-
-    public void setTileEntity(Tag te, int x, int y, int z) {
-        MCAFile f = files.get(fileC(x), fileC(z));
-        if (f == null) {
-            return;
-        }
-        f.setTileEntity(te, rem(x), y, rem(z), x, y, z);
-    }
-
-    static final int[] NS_X = {-1, 1, 0, 0, 0, 0};
-    static final int[] NS_Y = {0, 0, 0, 0, -1, 1};
-    static final int[] NS_Z = {0, 0, -1, 1, 0, 0};
 }

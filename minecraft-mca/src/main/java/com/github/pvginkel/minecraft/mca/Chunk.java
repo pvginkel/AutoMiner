@@ -10,27 +10,19 @@ public class Chunk {
     private Tag t;
     private Tag[] sections = new Tag[16];
     private byte[][] sectionBlocks = new byte[16][0];
-    public int globalChunkX, globalChunkZ;
-    Chunk[][] chunkCtx = new Chunk[3][3];
-
-    //BitSet partOfBlob = new BitSet(256 * 16 * 16);
-    PooledPagingByteArray partOfBlob;
-
-    byte[][] sectionSkyLights = new byte[16][0];
-
-    //byte[] supported = new byte[256 * 16 * 16];
-    PooledPagingByteArray supported;
-
-    // Loading
-    RegionFile rf;
-    int rfX, rfZ;
-    int maxChunksLoaded;
-
-    public boolean processed = false;
-
-    static long accessCounter = 0;
-    long lastAccess = 0;
-    ArrayList<Chunk> loadedChunks;
+    private int globalChunkX;
+    private int globalChunkZ;
+    private Chunk[][] chunks = new Chunk[3][3];
+    private PooledPagingByteArray partOfBlob;
+    private byte[][] sectionSkyLights = new byte[16][0];
+    private PooledPagingByteArray supported;
+    private RegionFile rf;
+    private int rfX;
+    private int rfZ;
+    private int maxChunksLoaded;
+    private static long accessCounter = 0;
+    private long lastAccess = 0;
+    private ArrayList<Chunk> loadedChunks;
 
     public Chunk(RegionFile rf, int rfX, int rfZ, int globalChunkX, int globalChunkZ, ArrayList<Chunk> loadedChunks, int maxChunksLoaded, PooledPagingByteArray.Pool pool) throws IOException {
         this.rf = rf;
@@ -364,5 +356,13 @@ public class Chunk {
     public void clearAllEntities() {
         prepare();
         t.findTagByName("Level").findTagByName("Entities").clearList();//setValue(Tag.Type.TAG_Compound);
+    }
+
+    public Chunk getChunk(int dx, int dz) {
+        return chunks[dz][dx];
+    }
+
+    public void setChunk(int dx, int dz, Chunk chunk) {
+        chunks[dz][dx] = chunk;
     }
 }

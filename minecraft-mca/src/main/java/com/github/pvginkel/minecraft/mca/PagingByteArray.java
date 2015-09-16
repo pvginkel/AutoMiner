@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public class PagingByteArray {
-	public byte[] array;
+	private byte[] array;
 	private int size;
 	private File pageFile;
 	

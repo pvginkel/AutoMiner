@@ -27,9 +27,9 @@ public class PooledPagingByteArray {
 		}
 	}
 	
-	public final Pool pool;
-	public byte[] array;
-	public final int size;
+	private final Pool pool;
+	private byte[] array;
+	private final int size;
 	private long offset = -1;
 	
 	private PooledPagingByteArray(int size, Pool pool) { this.size = size; this.pool = pool; }
