@@ -18,7 +18,6 @@ public class MCMap {
 
     public MCMap(File worldF, int maxChunksLoaded) throws FileNotFoundException, IOException {
         this.maxChunksLoaded = maxChunksLoaded;
-        System.out.println(maxChunksLoaded);
 
         InputStream fis = null;
         try {
@@ -51,8 +50,8 @@ public class MCMap {
         for (MCAFile f : files) {
             for (int z = 0; z < 32; z++) {
                 for (int x = 0; x < 32; x++) {
-                    int chunkX = f.xOffset * 32 + x;
-                    int chunkZ = f.zOffset * 32 + z;
+                    int chunkX = f.getXOffset() * 32 + x;
+                    int chunkZ = f.getZOffset() * 32 + z;
                     Chunk ch = getChunk(chunkX, chunkZ);
                     if (ch == null) {
                         continue;

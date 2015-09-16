@@ -7,10 +7,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 
 public class MCAFile {
-    public final File file;
-    public final int xOffset;
-    public final int zOffset;
-    public final Chunk[][] chunks = new Chunk[32][32];
+    private final File file;
+    private final int xOffset;
+    private final int zOffset;
+    private final Chunk[][] chunks = new Chunk[32][32];
     private RegionFile rf;
     private PooledPagingByteArray.Pool pool = new PooledPagingByteArray.Pool();
 
@@ -30,6 +30,14 @@ public class MCAFile {
                 }
             }
         }
+    }
+
+    public int getXOffset() {
+        return xOffset;
+    }
+
+    public int getZOffset() {
+        return zOffset;
     }
 
     public Chunk getChunk(int x, int z) {

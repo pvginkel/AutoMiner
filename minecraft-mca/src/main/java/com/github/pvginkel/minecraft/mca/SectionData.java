@@ -7,8 +7,11 @@ public class SectionData {
         this.sectionData = sectionData;
     }
 
+    public byte getType(int lx, int ly, int lz) {
+        return sectionData[((ly * 16 + lz) * 16 + lx)];
+    }
+
     public Block getBlock(int lx, int ly, int lz) {
-        int type = sectionData[((ly * 16 + lz) * 16 + lx)];
-        return Block.get(type);
+        return Block.get(getType(lx, ly, lz));
     }
 }

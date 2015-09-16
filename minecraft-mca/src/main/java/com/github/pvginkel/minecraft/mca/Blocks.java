@@ -172,4 +172,5 @@ public class Blocks {
     public static final Block COAL_BLOCK = Block.get("coal_block");
     public static final Block PACKED_ICE = Block.get("packed_ice");
     public static final Block DOUBLE_PLANT = Block.get("double_plant");
+    public static final Block UNKNOWN = Block.get("unknown");
 }

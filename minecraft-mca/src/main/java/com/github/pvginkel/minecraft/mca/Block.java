@@ -1,23 +1,24 @@
 package com.github.pvginkel.minecraft.mca;
 
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
+import com.google.common.primitives.UnsignedBytes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Block {
-    private static final TIntObjectMap<Block> TYPES_BY_TYPE = buildTypes();
+    private static final List<Block> TYPES = buildTypes();
     private static final Map<String, Block> TYPES_BY_NAME = buildNamedTypes();
-    private final int type;
+    private final byte type;
     private final String name;
 
     private Block(int type, String name) {
-        this.type = type;
+        this.type = UnsignedBytes.checkedCast(type);
         this.name = name;
     }
 
-    public int getType() {
+    public byte getType() {
         return type;
     }
 
@@ -33,16 +34,17 @@ public class Block {
     private static Map<String, Block> buildNamedTypes() {
         Map<String, Block> types = new HashMap<String, Block>();
 
-        for (int type : TYPES_BY_TYPE.keys()) {
-            Block block = TYPES_BY_TYPE.get(type);
-            types.put(block.name, block);
+        for (Block block : TYPES) {
+            if (block != null) {
+                types.put(block.name, block);
+            }
         }
 
         return types;
     }
 
-    private static TIntObjectMap<Block> buildTypes() {
-        TIntObjectMap<Block> types = new TIntObjectHashMap<Block>();
+    private static List<Block> buildTypes() {
+        List<Block> types = new ArrayList<>();
 
         register(types, 0, "air");
         register(types, 1, "stone");
@@ -215,19 +217,35 @@ public class Block {
         register(types, 173, "coal_block");
         register(types, 174, "packed_ice");
         register(types, 175, "double_plant");
+        register(types, 255, "unknown");
 
         return types;
     }
 
-    private static void register(TIntObjectMap<Block> types, int type, String name) {
-        types.put(type, new Block(type, name));
+    private static void register(List<Block> types, int type, String name) {
+        while (types.size() <= type) {
+            types.add(null);
+        }
+        types.set(type, new Block(type, name));
     }
 
-    public static Block get(int type) {
-        return TYPES_BY_TYPE.get(type);
+    public static Block get(byte type) {
+        int intType = UnsignedBytes.toInt(type);
+        Block block = null;
+        if (intType < TYPES.size()) {
+            block = TYPES.get(intType);
+        }
+        if (block == null) {
+            return Blocks.UNKNOWN;
+        }
+        return block;
     }
 
     public static Block get(String name) {
-        return TYPES_BY_NAME.get(name);
+        Block block = TYPES_BY_NAME.get(name);
+        if (block == null) {
+            return Blocks.UNKNOWN;
+        }
+        return block;
     }
 }
