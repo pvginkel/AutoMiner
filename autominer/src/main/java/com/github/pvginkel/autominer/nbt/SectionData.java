@@ -1,4 +1,4 @@
-package com.github.pvginkel.minecraft.mca;
+package com.github.pvginkel.autominer.nbt;
 
 public class SectionData {
     private final byte[] sectionData;

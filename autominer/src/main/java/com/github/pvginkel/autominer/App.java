@@ -1,17 +1,16 @@
 package com.github.pvginkel.autominer;
 
-import com.github.pvginkel.minecraft.mca.Block;
-import com.github.pvginkel.minecraft.mca.Blocks;
-import com.github.pvginkel.minecraft.mca.MCAFile;
-import com.github.pvginkel.minecraft.mca.MCMap;
-import gnu.trove.map.TObjectIntMap;
-import gnu.trove.map.hash.TObjectIntHashMap;
+import com.github.pvginkel.autominer.nbt.*;
+import com.github.pvginkel.autominer.support.OutputWriter;
+import com.github.pvginkel.autominer.support.Point;
+import com.github.pvginkel.autominer.support.Rectangle;
+import com.github.pvginkel.autominer.support.Vector;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class App {
     // Depths where diamond is located.
@@ -152,13 +151,12 @@ public class App {
         return mined;
     }
 
-    private static void buildCache(String arg) throws IOException {
-        MCMap map = new MCMap(new File(arg));
+    private static void buildCache(String arg) throws Exception {
+        System.out.println("Loading map...");
 
-        map.resetLevelData();
-        map.clearPartOfBlob();
+        List<Chunk> chunks = loadChunks(arg);
 
-        Rectangle boundingBox = findBoundingBox(map);
+        Rectangle boundingBox = findBoundingBox(chunks);
 
         // Convert the chunk bounding box to coordinates bounding box.
 
@@ -172,15 +170,101 @@ public class App {
         System.out.println("Active bounding box: " + boundingBox.getX1() + "x" + boundingBox.getY1() + " " + boundingBox.getX2() + "x" + boundingBox.getY2());
 
         // Build a map of all blocks located at the target coordinates. We add
-        // room to Y
+        // room to Y.
 
-        BlockMap blockMap = BlockMap.build(map, boundingBox, MIN_Y, MAX_Y);
+        System.out.println("Building block cache...");
+
+        BlockMap blockMap = BlockMap.build(chunks, boundingBox, MIN_Y, MAX_Y);
 
         blockMap.save(new File(CACHE_FILE));
     }
 
-    private static Rectangle findBoundingBox(MCMap map) {
-        Set<Point> chunks = findAvailableChunks(map);
+    private static List<Chunk> loadChunks(String arg) throws Exception {
+        File region = new File(arg, "region");
+        final List<Chunk> chunks = new ArrayList<>();
+
+        for (File file : region.listFiles()) {
+            if (file.getName().endsWith(".mca")) {
+                final Point offset = parseMcaFileName(file.getName());
+
+                try (RegionFile rf = new RegionFile(file)) {
+                    for (int z = 0; z < 32; z++) {
+                        for (int x = 0; x < 32; x++) {
+                            if (rf.hasChunk(x, z)) {
+                                try (NBTStreamReader sr = rf.getChunk(x, z)) {
+                                    final int xx = x;
+                                    final int zz = z;
+
+                                    new NBTWalker(sr) {
+                                        boolean inSections;
+                                        byte y;
+                                        byte[] blocks;
+
+                                        @Override
+                                        public boolean value(String name, byte value) throws Exception {
+                                            if ("Y".equals(name)) {
+                                                y = value;
+                                            }
+                                            return super.value(name, value);
+                                        }
+
+                                        @Override
+                                        public boolean value(String name, byte[] value) throws Exception {
+                                            if ("Blocks".equals(name)) {
+                                                blocks = value;
+                                            }
+                                            return true;
+                                        }
+
+                                        @Override
+                                        public boolean list(String name, int length) throws Exception {
+                                            inSections = "Sections".equals(name);
+                                            super.list(name, length);
+                                            return !inSections;
+                                        }
+
+                                        @Override
+                                        public boolean compound(String name) throws Exception {
+                                            if (!super.compound(name)) {
+                                                return false;
+                                            }
+
+                                            if (inSections) {
+                                                chunks.add(new Chunk(
+                                                    new Vector(
+                                                        offset.getX() * 32 + xx,
+                                                        y,
+                                                        offset.getY() * 32 + zz
+                                                    ),
+                                                    blocks
+                                                ));
+                                            }
+                                            return true;
+                                        }
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return chunks;
+    }
+
+    private static Point parseMcaFileName(String name) {
+        name = name.substring(2, name.length() - 4);
+        int index = name.indexOf('.');
+        int x = Integer.parseInt(name.substring(0, index));
+        int z = Integer.parseInt(name.substring(index + 1));
+        return new Point(x, z);
+    }
+
+    private static Rectangle findBoundingBox(List<Chunk> chunks) {
+        Set<Point> points = chunks.stream()
+            .map(p -> new Point(p.getPosition().getX(), p.getPosition().getZ()))
+            .collect(Collectors.toSet());
 
         // Find the bounding box of the chunks.
 
@@ -189,11 +273,11 @@ public class App {
         int maxX = Integer.MIN_VALUE;
         int maxZ = Integer.MIN_VALUE;
 
-        for (Point chunk : chunks) {
-            minX = Math.min(minX, chunk.getX());
-            minZ = Math.min(minZ, chunk.getY());
-            maxX = Math.max(maxX, chunk.getX());
-            maxZ = Math.max(maxZ, chunk.getY());
+        for (Point point : points) {
+            minX = Math.min(minX, point.getX());
+            minZ = Math.min(minZ, point.getY());
+            maxX = Math.max(maxX, point.getX());
+            maxZ = Math.max(maxZ, point.getY());
         }
 
         // See whether we're missing any Z's on any of the X chunks.
@@ -208,7 +292,7 @@ public class App {
 
         for (int z = minZ; z <= maxZ; z++) {
             for (int x = minX; x <= maxX; x++) {
-                if (!chunks.contains(new Point(x, z))) {
+                if (!points.contains(new Point(x, z))) {
                     if (x > (minX + maxX) / 2) {
                         validMaxX = Math.min(validMaxX, x - 1);
                     } else {
@@ -222,38 +306,5 @@ public class App {
         maxX = validMaxX;
 
         return new Rectangle(minX, minZ, maxX, maxZ);
-    }
-
-    private static class Counter<T> {
-        final TObjectIntMap<T> counts = new TObjectIntHashMap<>();
-
-        void add(T key) {
-            counts.put(key, counts.get(key) + 1);
-        }
-    }
-
-    private static Set<Point> findAvailableChunks(MCMap map) {
-        Set<Point> chunks = new HashSet<>();
-
-        for (MCAFile file : map.getFiles()) {
-            for (int zBlock = 0; zBlock < 32; zBlock++) {
-                for (int xBlock = 0; xBlock < 32; xBlock++) {
-                    if (file.getChunk(xBlock, zBlock) != null) {
-//                        boolean missing = false;
-//                        for (int ySection = 0; ySection < 16; ySection++) {
-//                            if (file.getChunk(xBlock, zBlock).sections()[ySection] == null) {
-//                                missing = true;
-//                                break;
-//                            }
-//                        }
-//                        if (!missing) {
-                        chunks.add(new Point(file.getXOffset() * 32 + xBlock, file.getZOffset() * 32 + zBlock));
-//                        }
-                    }
-                }
-            }
-        }
-
-        return chunks;
     }
 }

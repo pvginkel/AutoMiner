@@ -1,4 +1,4 @@
-package com.github.pvginkel.autominer;
+package com.github.pvginkel.autominer.support;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;

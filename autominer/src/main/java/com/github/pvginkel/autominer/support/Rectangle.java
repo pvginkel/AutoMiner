@@ -1,4 +1,4 @@
-package com.github.pvginkel.autominer;
+package com.github.pvginkel.autominer.support;
 
 public class Rectangle {
     private final int x1;

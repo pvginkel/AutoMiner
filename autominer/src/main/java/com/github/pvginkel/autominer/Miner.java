@@ -1,7 +1,9 @@
 package com.github.pvginkel.autominer;
 
-import com.github.pvginkel.minecraft.mca.Block;
-import com.github.pvginkel.minecraft.mca.Blocks;
+import com.github.pvginkel.autominer.nbt.Block;
+import com.github.pvginkel.autominer.nbt.Blocks;
+import com.github.pvginkel.autominer.support.Point;
+import com.github.pvginkel.autominer.support.Vector;
 
 import java.util.Arrays;
 import java.util.HashSet;

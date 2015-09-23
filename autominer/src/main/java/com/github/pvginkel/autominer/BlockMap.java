@@ -1,14 +1,19 @@
 package com.github.pvginkel.autominer;
 
-import com.github.pvginkel.minecraft.mca.*;
+import com.github.pvginkel.autominer.nbt.Block;
+import com.github.pvginkel.autominer.nbt.Blocks;
+import com.github.pvginkel.autominer.nbt.SectionData;
+import com.github.pvginkel.autominer.support.Rectangle;
+import com.github.pvginkel.autominer.support.Vector;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class BlockMap {
-    public static BlockMap build(MCMap map, Rectangle box, int minY, int maxY) {
+    public static BlockMap build(List<Chunk> chunks, Rectangle box, int minY, int maxY) {
         Vector offset = new Vector(box.getX1(), minY, box.getY1());
         int cx = box.getX2() - box.getX1() + 1;
         int cy = maxY - minY + 1;
@@ -21,50 +26,33 @@ public class BlockMap {
         int maxX = Integer.MIN_VALUE;
         int maxZ = Integer.MIN_VALUE;
 
-        int fileIndex = 0;
+        for (int i = 0; i < chunks.size(); i++) {
+            Chunk chunk = chunks.get(i);
 
-        for (MCAFile file : map.getFiles()) {
-            System.out.println(++fileIndex + "/" + map.getFiles().size());
+            SectionData sectionData = new SectionData(chunk.getBlocks());
 
-            for (int zBlock = 0; zBlock < 32; zBlock++) {
-                for (int xBlock = 0; xBlock < 32; xBlock++) {
-                    if (file.getChunk(xBlock, zBlock) == null) {
-                        continue;
-                    }
-                    for (int dz = -1; dz < 2; dz++) {
-                        for (int dx = -1; dx < 2; dx++) {
-                            Chunk chunk = map.getChunk(xBlock + file.getXOffset() * 32 + dx, zBlock + file.getZOffset() * 32 + dz);
-                            if (chunk != null) {
-                                chunk.prepare();
-                            }
-                        }
-                    }
-                    for (int ySection = 0; ySection < 16; ySection++) {
-                        if (file.getChunk(xBlock, zBlock).sections()[ySection] == null) {
-                            continue;
-                        }
-                        SectionData sectionData = file.getChunk(xBlock, zBlock).getSectionData(ySection);
-                        for (int ly = 0; ly < 16; ly++) {
-                            for (int lz = 0; lz < 16; lz++) {
-                                for (int lx = 0; lx < 16; lx++) {
-                                    int x = file.getXOffset() * 512 + xBlock * 16 + lx;
-                                    int y = ySection * 16 + ly;
-                                    int z = file.getZOffset() * 512 + zBlock * 16 + lz;
+            int bx = chunk.getPosition().getX();
+            int by = chunk.getPosition().getY();
+            int bz = chunk.getPosition().getZ();
 
-                                    minX = Math.min(x, minX);
-                                    maxX = Math.max(x, maxX);
-                                    minZ = Math.min(z, minZ);
-                                    maxZ = Math.max(z, maxZ);
+            for (int ly = 0; ly < 16; ly++) {
+                for (int lz = 0; lz < 16; lz++) {
+                    for (int lx = 0; lx < 16; lx++) {
+                        int x = bx * 16 + lx;
+                        int y = by * 16 + ly;
+                        int z = bz * 16 + lz;
 
-                                    if (
-                                        x >= offset.getX() && y >= offset.getY() && z >= offset.getZ() &&
-                                        x < (offset.getX() + cx) && y < (offset.getY() + cy) && z < (offset.getZ() + cz)
-                                    ) {
-                                        int index = (x - offset.getX()) * cy * cz + (y - offset.getY()) * cz + (z - offset.getZ());
-                                        blocks[index] = sectionData.getType(lx, ly, lz);
-                                    }
-                                }
-                            }
+                        minX = Math.min(x, minX);
+                        maxX = Math.max(x, maxX);
+                        minZ = Math.min(z, minZ);
+                        maxZ = Math.max(z, maxZ);
+
+                        if (
+                            x >= offset.getX() && y >= offset.getY() && z >= offset.getZ() &&
+                            x < (offset.getX() + cx) && y < (offset.getY() + cy) && z < (offset.getZ() + cz)
+                        ) {
+                            int index = (x - offset.getX()) * cy * cz + (y - offset.getY()) * cz + (z - offset.getZ());
+                            blocks[index] = sectionData.getType(lx, ly, lz);
                         }
                     }
                 }

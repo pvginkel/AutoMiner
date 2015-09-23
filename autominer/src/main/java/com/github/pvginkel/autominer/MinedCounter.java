@@ -1,6 +1,6 @@
 package com.github.pvginkel.autominer;
 
-import com.github.pvginkel.minecraft.mca.Block;
+import com.github.pvginkel.autominer.nbt.Block;
 import gnu.trove.map.TObjectFloatMap;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 
@@ -43,12 +43,7 @@ public class MinedCounter {
     public String toString() {
         List<Entry> entries = new ArrayList<>(entrySet());
 
-        Collections.sort(entries, new Comparator<Entry>() {
-            @Override
-            public int compare(Entry lhs, Entry rhs) {
-                return lhs.block.getName().compareTo(rhs.block.getName());
-            }
-        });
+        Collections.sort(entries, (lhs, rhs) -> lhs.block.getName().compareTo(rhs.block.getName()));
 
         StringBuilder sb = new StringBuilder();
 

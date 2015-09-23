@@ -65,10 +65,6 @@ points in the map and mining four adjacent tunnels.
 
 ## The code
 
-The code for parsing the Minecraft world data is taken from [Ager](https://github.com/Zarkonnen/Ager).
-Most of the functionality of that application has been stripped out and just
-the code for reading levels is kept.
-
 To use the application, you first need a world. The easiest way to do this is to
 just create a new world and generate chunks in it. I've tested the application
 with a world where 3000 blocks were generaed in the Z direction, flying over

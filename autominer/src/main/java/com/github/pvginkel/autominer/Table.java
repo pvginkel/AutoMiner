@@ -1,5 +1,6 @@
 package com.github.pvginkel.autominer;
 
+import com.github.pvginkel.autominer.support.OutputWriter;
 import gnu.trove.map.TObjectFloatMap;
 import gnu.trove.map.hash.TObjectFloatHashMap;
 

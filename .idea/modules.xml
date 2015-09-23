@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/autominer/autominer.iml" filepath="$PROJECT_DIR$/autominer/autominer.iml" />
-      <module fileurl="file://$PROJECT_DIR$/minecraft-mca/minecraft-mca.iml" filepath="$PROJECT_DIR$/minecraft-mca/minecraft-mca.iml" />
     </modules>
   </component>
 </project>

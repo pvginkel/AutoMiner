@@ -1,4 +1,4 @@
-package com.github.pvginkel.autominer;
+package com.github.pvginkel.autominer.support;
 
 public class Point {
     private final int x;

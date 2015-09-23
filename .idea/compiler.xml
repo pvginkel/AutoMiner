@@ -22,7 +22,6 @@
         <sourceTestOutputDir name="target\generated-test-sources\test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="true" />
-        <module name="minecraft-mca" />
       </profile>
       <profile default="false" name="Annotation profile for autominer" enabled="true">
         <sourceOutputDir name="target\generated-sources\annotations" />
@@ -33,7 +32,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="autominer" target="1.7" />
+      <module name="autominer" target="1.8" />
       <module name="minecraft-mca" target="1.7" />
     </bytecodeTargetLevel>
   </component>

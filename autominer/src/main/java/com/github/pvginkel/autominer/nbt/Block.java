@@ -1,4 +1,4 @@
-package com.github.pvginkel.minecraft.mca;
+package com.github.pvginkel.autominer.nbt;
 
 import com.google.common.primitives.UnsignedBytes;
 

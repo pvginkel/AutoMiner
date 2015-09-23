@@ -1,4 +1,4 @@
-package com.github.pvginkel.autominer;
+package com.github.pvginkel.autominer.support;
 
 public class Vector {
     private final int x;
